@@ -48,12 +48,11 @@ All arguments can be specified on command line or environment variables.
 - `--mikrotik-password` (required): The password for MikroTik API access.
 - `--zones` (optional): Comma-separated list of DNS zones to synchronize. If not specified, all zones will be synchronized.
 - `--record-types` (optional): Comma-separated list of DNS record types to synchronize (default: A, AAAA, CNAME).
-- `--interval` (optional): Interval in seconds between synchronization runs (default: 300).
 
 Example usage:
 
 ```sh
-hdns2mikrotik --hetzner-token your_token --mikrotik-host 192.168.88.1 --mikrotik-user admin --mikrotik-password your_password --zones example.com,example.org --record-types A,AAAA --interval 600
+hdns2mikrotik --hetzner-token your_token --mikrotik-host 192.168.88.1 --mikrotik-user admin --mikrotik-password your_password --zones example.com,example.org --record-types A,AAAA
 ```
 
 ## Contributing
