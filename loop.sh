@@ -29,7 +29,7 @@ while true; do
     if [ "$serial" != "$old_serial" ]; then
         echo "Serial of $ZONE changed from $old_serial to $serial. Trigger sync."
 
-        hdns2mikrotik sync --zones "$ZONE"
+        poetry run hdns2mikrotik sync --zones "$ZONE"
 
         old_serial="$serial"
     fi
