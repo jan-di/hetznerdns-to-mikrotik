@@ -18,10 +18,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
     permissions:
       contents: read
       packages: write
+    steps:
 
       -
         name: Checkout
