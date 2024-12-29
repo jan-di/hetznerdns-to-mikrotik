@@ -32,6 +32,10 @@ while true; do
         poetry run hdns2mikrotik sync --zones "$ZONE"
 
         old_serial="$serial"
+    else
+        echo "Serial of $ZONE is still $serial. No need to sync."
     fi
+
+    echo "Sleeping for $INTERVAL seconds"
     sleep "$INTERVAL"
 done
