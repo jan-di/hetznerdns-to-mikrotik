@@ -25,7 +25,7 @@ get_serial() {
 while true; do
 
     if [ -n "$HEALTHCHECK_START_URL" ]; then
-        curl -fsS "$HEALTHCHECK_START_URL"
+        wget -q -O /dev/null "$HEALTHCHECK_START_URL"
     fi
     
     success=1
@@ -50,11 +50,11 @@ while true; do
     # check if success
     if [ "$success" = "1" ]; then
         if [ -n "$HEALTHCHECK_SUCCESS_URL" ]; then
-            curl -fsS "$HEALTHCHECK_SUCCESS_URL"
+            wget -q -O /dev/null "$HEALTHCHECK_SUCCESS_URL"
         fi
     else
         if [ -n "$HEALTHCHECK_FAILURE_URL" ]; then
-            curl -fsS "$HEALTHCHECK_FAILURE_URL"
+            wget -q -O /dev/null "$HEALTHCHECK_FAILURE_URL"
         fi
     fi
 
