@@ -116,6 +116,13 @@ def get_hetzner_dns_records(dns_api: DnsApi, sync_zone_names: str, sync_record_t
                 ttl=record.get('ttl')
             )
 
+            if record.record_type == 'CNAME':
+                # Normalize CNAME records
+                if record.content.endswith('.'):
+                    record.content = record.content[:-1]
+                else:
+                    record.content = record.content + '.' + zone['name']
+
             result_records[record.get_uid()] = record
     
     return result_records

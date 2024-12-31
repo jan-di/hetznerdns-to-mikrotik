@@ -4,7 +4,8 @@ This project allows you to synchronize DNS records from Hetzner DNS to a MikroTi
 
 ## Features
 
-- Synchronizes various record types (defaults to A, AAAA, and CNAME) from Hetzner DNS to MikroTik.
+- Synchronizes dns zones from Hetzner DNS to MikroTik.
+- Supported Record types: A, AAAA, CNAME
 - Supports filtering by zone names.
 
 ## Requirements
