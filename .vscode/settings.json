@@ -1,3 +1,22 @@
 {
-    "python.defaultInterpreterPath": ".venv/bin/python3"
+    "python.defaultInterpreterPath": ".venv/bin/python3",
+    "pylint.path": [
+        ".venv/bin/pylint"
+    ],
+    "black-formatter.path": [
+        ".venv/bin/black"
+    ],
+    "isort.path": [
+        ".venv/bin/isort"
+    ],
+    "mypy-type-checker.path": [
+        ".venv/bin/mypy"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+    },
 }

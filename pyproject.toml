@@ -1,19 +1,45 @@
-[tool.poetry]
+[project]
 name = "hetznerdns-to-mikrotik"
 version = "0.0.0"
-description = ""
-authors = ["Jan Dittrich <mail@jand.one>"]
+description = "Tool to sync Hetzner Cloud DNS records to Mikrotik routers"
+authors = [{ name = "Jan Dittrich", email = "mail@jand.one" }]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.13"
-routeros-api = "^0.18.1"
-requests = "^2.32.3"
-click = "^8.1.8"
-
-[tool.poetry.scripts]
-hdns2mikrotik = "hetznerdns_to_mikrotik.cli:main"
+requires-python = "^3.14"
+dynamic = ["dependencies"]
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "^3.14"
+routeros-api = "^0.18.1"
+requests = "^2.32.4"
+click = "^8.1.8"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.9.0"
+pylint = "^3.3.8"
+isort = "^6.0.1"
+mypy = "^1.18.2"
+types-requests = "^2.32.4.20250913"
+
+[project.scripts]
+hdns2mikrotik = "hetznerdns_to_mikrotik.cli:main"
+
+[tool.black]
+line-length = 120
+
+[tool.pylint]
+max-line-length = 120
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+
+[tool.mypy]
+exclude_gitignore = true
+
+[[tool.mypy.overrides]]
+module = ["routeros_api.*"]
+ignore_missing_imports = true

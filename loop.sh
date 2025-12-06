@@ -27,7 +27,7 @@ while true; do
     if [ -n "$HEALTHCHECK_START_URL" ]; then
         wget -q -O /dev/null "$HEALTHCHECK_START_URL"
     fi
-    
+
     success=1
     random_nameserver=$(echo "$HETZNER_NAMESERVERS" | tr ' ' '\n' | shuf | head -n 1)
     serial=$(get_serial "$ZONE" "$random_nameserver")
@@ -40,7 +40,6 @@ while true; do
             echo "Failed to sync $ZONE"
             success=0
         fi
-    
 
         old_serial="$serial"
     else

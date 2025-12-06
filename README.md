@@ -1,6 +1,6 @@
 # HetznerDNS to MikroTik
 
-This project allows you to synchronize DNS records from Hetzner DNS to a MikroTik router. It automates the process of updating MikroTik's DNS settings based on the records in your Hetzner DNS account.
+This project allows you to synchronize DNS records from Hetzner Cloud DNS to a MikroTik router. It automates the process of updating MikroTik's DNS settings based on the records in your Hetzner DNS account.
 
 ## Features
 
@@ -10,7 +10,7 @@ This project allows you to synchronize DNS records from Hetzner DNS to a MikroTi
 
 ## Requirements
 
-- Python 3.13 or higher
+- Python 3.14 or higher
 - MikroTik router with API access enabled
 - Hetzner DNS API token
 
@@ -36,24 +36,24 @@ Package will probably be published on pypi later.
 To use the script, you can run the following command:
 
 ```sh
-python sync_dns.py [arguments]
+python hdns2mikrotik [arguments]
 ```
 
 ### Arguments
 
 All arguments can be specified on command line or environment variables.
 
-- `--hetzner-token` (required): Your Hetzner DNS API token.
-- `--mikrotik-host` (required): The hostname or IP address of your MikroTik router.
-- `--mikrotik-user` (required): The username for MikroTik API access.
-- `--mikrotik-password` (required): The password for MikroTik API access.
+- `--api-token` (required): Your Hetzner DNS API token.
+- `--mikrotik` (required): The hostname or IP address of your MikroTik router.
+- `--username` (required): The username for MikroTik API access.
+- `--password` (required): The password for MikroTik API access.
 - `--zones` (optional): Comma-separated list of DNS zones to synchronize. If not specified, all zones will be synchronized.
 - `--record-types` (optional): Comma-separated list of DNS record types to synchronize (default: A, AAAA, CNAME).
 
 Example usage:
 
 ```sh
-hdns2mikrotik --hetzner-token your_token --mikrotik-host 192.168.88.1 --mikrotik-user admin --mikrotik-password your_password --zones example.com,example.org --record-types A,AAAA
+hdns2mikrotik --api-token your_token --mikrotik 192.168.88.1 --username admin --password your_password --zones example.com,example.org --record-types A,AAAA
 ```
 
 ## Contributing
