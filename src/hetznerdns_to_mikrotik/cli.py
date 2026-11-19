@@ -2,7 +2,13 @@
 CLI for hetznerdns-to-mikrotik
 """
 
+import random
+import time
+
 import click
+import dns.exception
+import dns.resolver
+import requests
 import routeros_api
 from routeros_api.resource import RouterOsResource
 
@@ -34,6 +40,27 @@ def main():
 @click.option("--password", "-p", help="Mikrotik Password", required=True, envvar="PASSWORD")
 @click.option("--mikrotik", "-m", help="Mikrotik Host", required=True, envvar="MIKROTIK")
 @click.option("--dry-run", "-d", is_flag=True, help="Dry run mode", default=False)
+@click.option("--watch", "-w", is_flag=True, help="Keep running and re-sync periodically", envvar="WATCH")
+@click.option(
+    "--watch-interval",
+    help="Seconds between syncs in watch mode",
+    default=600,
+    show_default=True,
+    type=click.IntRange(min=1),
+    envvar="WATCH_INTERVAL",
+)
+@click.option(
+    "--healthchecksio-url",
+    help="Healthchecks.io-style base URL. Pinged at <url>/start before each sync, <url> on success, <url>/fail on failure",
+    envvar="HEALTHCHECKSIO_URL",
+)
+@click.option(
+    "--nameservers",
+    help="Space or comma separated Hetzner nameservers, queried for the SOA serial in watch mode",
+    default="helium.ns.hetzner.de,oxygen.ns.hetzner.com,hydrogen.ns.hetzner.com",
+    show_default=True,
+    envvar="HETZNER_NAMESERVERS",
+)
 def sync(
     api_token: str,
     zones: str,
@@ -43,24 +70,148 @@ def sync(
     user: str,
     password: str,
     dry_run: bool,
+    watch: bool,
+    watch_interval: int,
+    healthchecksio_url: str | None,
+    nameservers: str,
 ):
     """
     Sync Hetzner DNS records to Mikrotik RouterOS
+
+    In watch mode, a sync only happens when a zone's SOA serial changed since the last successful sync.
     """
 
-    # Filter options
-    sync_zone_names = zones.split(",")
+    nameserver_list = nameservers.replace(",", " ").split()
+    zone_list = zones.split(",")
+    synced_serials: dict[str, int | None] = {}
+
+    def run_once() -> bool:
+        ping_healthchecksio(healthchecksio_url, "/start")
+        try:
+            # Fetch before syncing, so a change that happens during the sync is picked up next time
+            serials = get_serials(zone_list, nameserver_list) if watch else {}
+            changed = [
+                zone
+                for zone in zone_list
+                if not watch or serials[zone] is None or serials[zone] != synced_serials.get(zone)
+            ]
+            if changed:
+                click.echo(f"Syncing zones: {', '.join(changed)}")
+                sync_once(api_token, zone_list, changed, record_types, ttl, mikrotik, user, password, dry_run)
+                # only remembered after a successful sync
+                synced_serials.update({zone: serials[zone] for zone in changed} if watch else {})
+            else:
+                click.echo(f"Serials unchanged ({serials}). No need to sync.")
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            click.echo(f"Sync failed: {exc!r}", err=True)
+            ping_healthchecksio(healthchecksio_url, "/fail")
+            return False
+        ping_healthchecksio(healthchecksio_url, "")
+        return True
+
+    if not watch:
+        if not run_once():
+            raise SystemExit(1)
+        return
+
+    try:
+        while True:
+            run_once()  # a failed sync is simply retried on the next iteration
+            click.echo(f"Sleeping for {watch_interval} seconds")
+            time.sleep(watch_interval)
+    except KeyboardInterrupt:
+        click.echo("Interrupted, exiting")
+
+
+def get_serials(zones: list[str], nameservers: list[str]) -> dict[str, int | None]:
+    """
+    Get the SOA serial of each zone from a random Hetzner nameserver. None if it cannot be determined,
+    which forces a sync.
+    """
+    nameserver = random.choice(nameservers)
+    result: dict[str, int | None] = {}
+    try:
+        ns_ip = dns.resolver.resolve(nameserver, "A")[0].address
+        resolver = dns.resolver.Resolver(configure=False)
+        resolver.nameservers = [ns_ip]
+    except dns.exception.DNSException as exc:
+        click.echo(f"Could not resolve nameserver {nameserver}: {exc!r}", err=True)
+        return {zone: None for zone in zones}
+
+    for zone in zones:
+        try:
+            result[zone] = resolver.resolve(zone, "SOA", lifetime=10)[0].serial
+        except dns.exception.DNSException as exc:
+            click.echo(f"Could not get SOA serial of {zone} from {nameserver}: {exc!r}", err=True)
+            result[zone] = None
+    return result
+
+
+def ping_healthchecksio(base_url: str | None, suffix: str):
+    """
+    Ping the healthcheck URL. Never raises, a broken healthcheck must not break the sync.
+    """
+    if not base_url:
+        return
+    try:
+        requests.get(base_url.rstrip("/") + suffix, timeout=10).raise_for_status()
+    except requests.RequestException as exc:
+        click.echo(f"Healthcheck ping failed: {exc!r}", err=True)
+
+
+def sync_once(
+    api_token: str,
+    all_zones: list[str],
+    sync_zone_names: list[str],
+    record_types: str,
+    ttl: int,
+    mikrotik: str,
+    user: str,
+    password: str,
+    dry_run: bool,
+):
+    """
+    Perform a single sync run for the given zones. Raises on any failure.
+    """
+
     sync_record_types = record_types.split(",")
 
-    # Get records from Mikrotik
-    mikrotik_api = routeros_api.RouterOsApiPool(
+    pool = routeros_api.RouterOsApiPool(
         host=mikrotik, username=user, password=password, plaintext_login=True, use_ssl=True
-    ).get_api()
-    static_dns = mikrotik_api.get_resource("/ip/dns/static")
-    local_records = get_mikrotik_dns_records(static_dns, sync_record_types)
+    )
+    mikrotik_api = pool.get_api()
+    try:
+        sync_records(
+            mikrotik_api.get_resource("/ip/dns/static"),
+            HetznerApi(api_token),
+            all_zones,
+            sync_zone_names,
+            sync_record_types,
+            ttl,
+            dry_run,
+        )
+    finally:
+        pool.disconnect()
 
-    # Get records from Hetzner DNS
-    dns_api = HetznerApi(api_token)
+
+def sync_records(
+    static_dns: RouterOsResource,
+    dns_api: HetznerApi,
+    all_zones: list[str],
+    sync_zone_names: list[str],
+    sync_record_types: list[str],
+    ttl: int,
+    dry_run: bool,
+):
+    """
+    Compare Hetzner and Mikrotik records of the given zones and apply the difference.
+    Records belonging to other zones are left untouched.
+    """
+    local_records = {
+        uid: record
+        for uid, record in get_mikrotik_dns_records(static_dns, sync_record_types).items()
+        if find_zone(record.name, all_zones) in sync_zone_names
+    }
     remote_records = get_hetzner_dns_records(dns_api, sync_zone_names, sync_record_types)
 
     # Compare records
@@ -90,6 +241,15 @@ def sync(
         click.echo(f"Adding record {record} {' (dry run)' if dry_run else ''}")
         if not dry_run:
             add_record(static_dns, record, ttl)
+
+
+def find_zone(name: str, zones: list[str]) -> str | None:
+    """
+    Find the zone a record name belongs to. The longest matching zone wins, so records of a
+    subzone are not attributed to its parent zone.
+    """
+    matches = [zone for zone in zones if name == zone or name.endswith("." + zone)]
+    return max(matches, key=len, default=None)
 
 
 def add_record(static_dns_resource: RouterOsResource, record: Record, ttl: int):

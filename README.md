@@ -50,6 +50,11 @@ All arguments can be specified on command line or environment variables.
 - `--zones` (optional): Comma-separated list of DNS zones to synchronize. If not specified, all zones will be synchronized.
 - `--record-types` (optional): Comma-separated list of DNS record types to synchronize (default: A, AAAA, CNAME).
 
+- `--watch` / `-w` (optional): Keep running and re-sync periodically instead of exiting after one sync. A zone is only re-synced when its SOA serial changed since the last successful sync, a failed sync is retried on the next iteration.
+- `--watch-interval` (optional): Seconds between syncs in watch mode (default: 600).
+- `--nameservers` (optional): Comma or space separated Hetzner nameservers, one of which is picked at random to read the SOA serial in watch mode (default: the three Hetzner nameservers; env `HETZNER_NAMESERVERS`).
+- `--healthchecksio-url` (optional): Healthchecks.io-style base URL. Pinged at `<url>/start` before each sync, `<url>` on success and `<url>/fail` on failure.
+
 Example usage:
 
 ```sh

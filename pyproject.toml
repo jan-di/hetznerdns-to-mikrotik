@@ -9,6 +9,7 @@ dependencies = [
     "routeros-api>=0.21.0,<1",
     "requests>=2.34.2,<3",
     "click>=8.5.1,<9",
+    "dnspython>=2.9.2,<3",
 ]
 
 [dependency-groups]
