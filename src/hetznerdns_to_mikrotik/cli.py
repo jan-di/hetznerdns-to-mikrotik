@@ -36,9 +36,9 @@ def main():
     envvar="RECORD_TYPES",
 )
 @click.option("--ttl", "-t", help="TTL for local records", default=600, envvar="TTL")
-@click.option("--user", "-u", help="Mikrotik User", required=True, envvar="USER")
-@click.option("--password", "-p", help="Mikrotik Password", required=True, envvar="PASSWORD")
-@click.option("--mikrotik", "-m", help="Mikrotik Host", required=True, envvar="MIKROTIK")
+@click.option("--user", "-u", help="Mikrotik User", required=True, envvar="MIKROTIK_USER")
+@click.option("--password", "-p", help="Mikrotik Password", required=True, envvar="MIKROTIK_PASSWORD")
+@click.option("--mikrotik", "-m", help="Mikrotik Host", required=True, envvar="MIKROTIK_HOST")
 @click.option("--dry-run", "-d", is_flag=True, help="Dry run mode", default=False)
 @click.option("--watch", "-w", is_flag=True, help="Keep running and re-sync periodically", envvar="WATCH")
 @click.option(
