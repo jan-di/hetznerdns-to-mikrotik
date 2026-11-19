@@ -218,10 +218,10 @@ def sync_records(
     local_records_uids = set(local_records.keys())
     remote_records_uids = set(remote_records.keys())
     click.echo(f"Found {len(remote_records.values())} remote records")
-    for record in remote_records.values():
+    for record in sorted(remote_records.values(), key=record_sort_key):
         click.echo("- " + str(record))
     click.echo(f"Found {len(local_records.values())} local records")
-    for record in local_records.values():
+    for record in sorted(local_records.values(), key=record_sort_key):
         click.echo("- " + str(record))
 
     # Remove records that are not in remote
@@ -241,6 +241,13 @@ def sync_records(
         click.echo(f"Adding record {record} {' (dry run)' if dry_run else ''}")
         if not dry_run:
             add_record(static_dns, record, ttl)
+
+
+def record_sort_key(record: Record) -> tuple[str, str, str]:
+    """
+    Sort records by type, then name, then value
+    """
+    return (record.record_type, record.name, record.value or "")
 
 
 def find_zone(name: str, zones: list[str]) -> str | None:
