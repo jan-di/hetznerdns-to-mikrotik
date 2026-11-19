@@ -340,7 +340,7 @@ def get_hetzner_dns_records(
                 for rrset_record in rrset["records"]:
                     record = Record(
                         record_type=rrset["type"],
-                        name=rrset["name"] + "." + zone["name"],
+                        name=zone["name"] if rrset["name"] == "@" else rrset["name"] + "." + zone["name"],
                         value=rrset_record["value"],
                         ttl=rrset_record.get("ttl"),
                     )
