@@ -26,7 +26,7 @@ This project allows you to synchronize DNS records from Hetzner Cloud DNS to a M
 2. Install the required Python packages:
 
     ```sh
-    poetry install
+    uv sync
     ```
 
 Package will probably be published on pypi later.

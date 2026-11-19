@@ -4,25 +4,28 @@ version = "0.0.0"
 description = "Tool to sync Hetzner Cloud DNS records to Mikrotik routers"
 authors = [{ name = "Jan Dittrich", email = "mail@jand.one" }]
 readme = "README.md"
-requires-python = "^3.14"
-dynamic = ["dependencies"]
+requires-python = ">=3.14"
+dependencies = [
+    "routeros-api>=0.18.1",
+    "requests>=2.32.4",
+    "click>=8.1.8",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.9.0",
+    "pylint>=3.3.8",
+    "isort>=6.0.1",
+    "mypy>=1.18.2",
+    "types-requests>=2.32.4.20250913",
+]
 
 [build-system]
-requires = ["poetry-core>=2.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.dependencies]
-python = "^3.14"
-routeros-api = "^0.18.1"
-requests = "^2.32.4"
-click = "^8.1.8"
-
-[tool.poetry.group.dev.dependencies]
-black = "^25.9.0"
-pylint = "^3.3.8"
-isort = "^6.0.1"
-mypy = "^1.18.2"
-types-requests = "^2.32.4.20250913"
+[tool.hatch.build.targets.wheel]
+packages = ["src/hetznerdns_to_mikrotik"]
 
 [project.scripts]
 hdns2mikrotik = "hetznerdns_to_mikrotik.cli:main"
