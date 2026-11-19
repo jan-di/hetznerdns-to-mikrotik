@@ -10,7 +10,7 @@ This project allows you to synchronize DNS records from Hetzner Cloud DNS to a M
 
 ## Requirements
 
-- Python 3.14 or higher
+- Python 3.15 or higher
 - MikroTik router with API access enabled
 - Hetzner DNS API token
 
