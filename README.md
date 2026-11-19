@@ -45,7 +45,7 @@ All arguments can be specified on command line or environment variables.
 
 - `--api-token` (required): Your Hetzner DNS API token.
 - `--mikrotik` (required): The hostname or IP address of your MikroTik router.
-- `--username` (required): The username for MikroTik API access.
+- `--user` (required): The username for MikroTik API access.
 - `--password` (required): The password for MikroTik API access.
 - `--zones` (optional): Comma-separated list of DNS zones to synchronize. If not specified, all zones will be synchronized.
 - `--record-types` (optional): Comma-separated list of DNS record types to synchronize (default: A, AAAA, CNAME).
@@ -58,8 +58,31 @@ All arguments can be specified on command line or environment variables.
 Example usage:
 
 ```sh
-hdns2mikrotik --api-token your_token --mikrotik 192.168.88.1 --username admin --password your_password --zones example.com,example.org --record-types A,AAAA
+hdns2mikrotik --api-token your_token --mikrotik 192.168.88.1 --user hdns2mikrotik --password your_password --zones example.com,example.org --record-types A,AAAA
 ```
+
+## MikroTik user
+
+The tool connects to the RouterOS API over SSL (`api-ssl`, port 8729), so the `api-ssl` service must be enabled with a certificate assigned. It reads, adds and removes entries under `/ip/dns/static`, so the user needs only these policies: `api`, `read` and `write`.
+
+Create a dedicated group and user instead of using `admin`:
+
+```
+/user group add name=hdns2mikrotik policy=api,read,write
+/user add name=hdns2mikrotik group=hdns2mikrotik password=<password> address=<ip-of-the-host-running-this-tool>
+```
+
+The `address` option restricts logins to the machine running the sync. RouterOS policies are not path-specific, so `write` allows changes beyond DNS. The tool only touches static DNS entries whose comment is `hetznerdns_to_mikrotik`, other entries are left alone.
+
+## Docker
+
+The image runs `sync` in watch mode by default (`WATCH=true`), so it keeps running and re-syncs when a zone's serial changes. Configuration is done via environment variables, see [.env.example](.env.example).
+
+```sh
+docker run -d --env-file .env docker.io/jandi/hetznerdns-to-mikrotik:latest
+```
+
+A hardened setup is shown in [compose.example.yaml](compose.example.yaml).
 
 ## Contributing
 

@@ -21,7 +21,12 @@ FROM docker.io/python:3.15-alpine
 
 COPY --from=builder /app/.venv /app/.venv
 
+# Run as unprivileged user. The app is read-only for it and needs no writable paths.
+RUN adduser -D -H -u 65532 app
+USER 65532:65532
+
 ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
     WATCH=true
 
 ENTRYPOINT ["hdns2mikrotik"]

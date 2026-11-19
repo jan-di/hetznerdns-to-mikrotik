@@ -1,0 +1,12 @@
+services:
+  hdns2mikrotik:
+    image: docker.io/jandi/hetznerdns-to-mikrotik:latest
+    restart: unless-stopped
+    env_file: .env
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 64m
+    user: "65532:65532"
